@@ -1,0 +1,22 @@
+{
+    "ImageServer": {
+        "Address": {
+            "host": "apitest.binbirdogal.com",
+            "port": 443,
+            "scheme": "https"
+        }
+    },
+    "App": {
+        "Name": "Binbirdogal Image Server",
+        "Version": "1.0.0",
+        "Description": "Binbirdogal",
+        "Author": "Binbirdogal",
+        "Email": "",
+        "Port": 4000,
+        "Response" : {
+            "Headers" : {
+                "Cache-Control": "public, max-age=31536000"
+            }
+        }
+    }
+}
