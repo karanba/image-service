@@ -1,3 +1,4 @@
+import dotenv from 'dotenv';
 import config from 'config';
 import express from 'express';
 import sharp from 'sharp';
@@ -7,24 +8,36 @@ import mime from 'mime';
 import {
     createWriteStream
 } from 'node:fs';
+
 import {
     pipeline
 } from 'node:stream';
+
 import {
     promisify
 } from 'node:util'
+
 import fs from 'fs';
 import fetch from 'node-fetch';
+
+const result = dotenv.config({
+    path: path.join(path.resolve(), '.env')
+});
+
+console.log('NODE_ENV: ' + config.util.getEnv('NODE_ENV'));
+console.log('NODE_CONFIG_ENV: ' + config.util.getEnv('NODE_CONFIG_ENV'));
+
+if (result.error) {
+    throw result.error
+}
 
 const streamPipeline = promisify(pipeline);
 const __dirname = path.resolve();
 const app = express();
-const upload = multer({
-    storage: multer.memoryStorage()
-});
 
 const ImageServerConfig = config.get('ImageServer');
 const AppConfig = config.get('App');
+
 
 async function download(url, fileName) {
     console.log(`dowloading from ${url}`);
@@ -50,15 +63,13 @@ function getSendFileOptions(req, responseFilePath) {
             'x-sent': true,
             'Cache-Control': AppConfig.Response.Headers['Cache-Control'],
             'Content-Type': req.query.hasOwnProperty('webp') ?
-                'image/webp': mime.getType(responseFilePath)
+                'image/webp' : mime.getType(responseFilePath)
         }
     };
 }
+
 app.set('view engine', 'ejs');
-
 app.get('/i/*', async (req, res) => {
-    
-
     const requestedFile = req.params[0];
     console.log(`requestedFile: ${requestedFile}`);
 
@@ -87,13 +98,19 @@ app.get('/i/*', async (req, res) => {
     res.sendFile(responseFilePath, options);
 });
 
-app.listen(AppConfig.Port, () => {
-    console.log(`${AppConfig.Name} started`);
-    console.log(`listening on port ${AppConfig.Port}`);
+const PORT = process.env.PORT || AppConfig.Port;
+app.listen(PORT, () => {
+    console.log("\x1b[44m", `${AppConfig.Name} started`, "\x1b[0m");
+    console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+    console.log(`NODE_CONFIG_DIR: ${process.env.NODE_CONFIG_DIR}`);
+    console.log(`Image Source: ${ImageServerConfig.Address.scheme}://${ImageServerConfig.Address.host}:${ImageServerConfig.Address.port}`);
+    console.log(`listening on port ${PORT}`);
+    console.log(`Your server available at http://localhost:${PORT}`);
 });
 
 async function convert(fileName, outputFileName) {
     console.log(`converting ${fileName} to ${outputFileName}`);
     return await sharp(path.join(__dirname, fileName))
+        .webp(AppConfig.Options.webp)
         .toFile(path.join(__dirname, outputFileName));
 }

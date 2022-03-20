@@ -1,2 +1,7 @@
 node_modules/
 uploads/
+.env
+daemon/mysvc.exe
+daemon/mysvc.exe.config
+*.log
+daemon/mysvc.xml

@@ -17,6 +17,12 @@
             "Headers" : {
                 "Cache-Control": "public, max-age=31536000"
             }
+        },
+        "Options": {
+            "webp": {
+                "nearLossless": true,
+                "loop": 0
+            }
         }
     }
 }

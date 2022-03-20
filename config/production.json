@@ -1,7 +1,9 @@
 {
-    "Api": {
-        "Adress": {
-            "host": "api.binbirdogal.com"
+    "ImageServer": {
+        "Address": {
+            "host": "api.binbirdogal.com",
+            "port": 443,
+            "scheme": "https"
         }
     }
 }
