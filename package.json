@@ -5,7 +5,13 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start:dev": "cross-env NODE_ENV=development node ./service.js",
+    "win-dev:i": "cross-env NODE_ENV=development node ./install-service.js",
+    "win-dev:u": "cross-env NODE_ENV=development node ./uninstall-service.js",
+
+    "start": "cross-env NODE_ENV=production node ./service.js",
+    "win:i": "cross-env NODE_ENV=production node ./install-service.js",
+    "win:u": "cross-env NODE_ENV=production node ./uninstall-service.js"
   },
   "keywords": [],
   "author": "",
@@ -23,5 +29,8 @@
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
     "sharp": "^0.30.3"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
   }
 }

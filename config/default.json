@@ -9,7 +9,9 @@
     "App": {
         "Name": "Binbirdogal Image Server",
         "Version": "1.0.0",
-        "Description": "Binbirdogal",
+        "ServieName": "Image-Server",
+        "Description": "Image Server",
+        "ServiceFileName": "service.js",
         "Author": "Binbirdogal",
         "Email": "",
         "Port": 4000,
