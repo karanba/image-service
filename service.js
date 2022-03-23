@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import winston from 'winston';
 import config from 'config';
 import express from 'express';
 import sharp from 'sharp';
@@ -36,8 +37,37 @@ const ImageServerConfig = config.get('ImageServer');
 const AppConfig = config.get('App');
 
 
+const logConfiguration = {
+    transports: [
+        new winston.transports.File({
+            filename: './logs/error.log',
+            level: 'error'
+        }),
+        new winston.transports.File({
+            filename: './logs/combined.log'
+        }),
+    ],
+    format: winston.format.combine(
+        winston.format.label({
+            label: `Label🏷️`
+        }),
+        winston.format.timestamp({
+            format: 'MMM-DD-YYYY HH:mm:ss'
+        }),
+        winston.format.printf(info => `${info.level}: ${info.label}: ${[info.timestamp]}: ${info.message}`),
+    )
+};
+
+const logger = winston.createLogger(logConfiguration);
+
+if (process.env.NODE_ENV !== 'production') {
+    logger.add(new winston.transports.Console());
+}
+
+
+
 async function download(url, fileName) {
-    console.log(`dowloading from ${url}`);
+    logger.info(`dowloading from ${url}`);
     const response = await fetch(url);
     if (!response.ok) {
         return response;
@@ -67,9 +97,10 @@ function getSendFileOptions(req, responseFilePath) {
 }
 
 app.set('view engine', 'ejs');
+
 app.get('/i/*', async (req, res) => {
     const requestedFile = req.params[0];
-    console.log(`requestedFile: ${requestedFile}`);
+    logger.info(`requestedFile: ${requestedFile}`);
 
     const extension = path.extname(requestedFile);
 
@@ -78,7 +109,7 @@ app.get('/i/*', async (req, res) => {
         requestedFile;
 
     if (fs.existsSync(path.join(__dirname, responseFilePath)) && fs.statSync(path.join(__dirname, responseFilePath)).isFile()) {
-        console.log(`existing one sending ${responseFilePath}`);
+        logger.info(`existing one sending ${responseFilePath}`);
         res.sendFile(responseFilePath, getSendFileOptions(req, responseFilePath));
         return;
     }
@@ -98,18 +129,18 @@ app.get('/i/*', async (req, res) => {
 
 const PORT = process.env.PORT || AppConfig.Port;
 app.listen(PORT, () => {
-    console.log("\x1b[44m", `${AppConfig.Name} started`, "\x1b[0m");
-    console.log('NODE_ENV: ' + config.util.getEnv('NODE_ENV'));
-    console.log('NODE_CONFIG_ENV: ' + config.util.getEnv('NODE_CONFIG_ENV'));
-    console.log(`NODE_CONFIG_DIR: ${process.env.NODE_CONFIG_DIR}`);
-    console.log(`Image Source: ${ImageServerConfig.Address.scheme}://${ImageServerConfig.Address.host}:${ImageServerConfig.Address.port}`);
-    console.log(`listening on port ${PORT}`);
-    console.log(`Your server available at http://localhost:${PORT}`);
-    console.log("\x1b[44m", "----------------------------", "\x1b[0m");
+    logger.info(`${AppConfig.Name} started`);
+    logger.info('NODE_ENV: ' + config.util.getEnv('NODE_ENV'));
+    logger.info('NODE_CONFIG_ENV: ' + config.util.getEnv('NODE_CONFIG_ENV'));
+    logger.info(`NODE_CONFIG_DIR: ${process.env.NODE_CONFIG_DIR}`);
+    logger.info(`Image Source: ${ImageServerConfig.Address.scheme}://${ImageServerConfig.Address.host}:${ImageServerConfig.Address.port}`);
+    logger.info(`listening on port ${PORT}`);
+    logger.info(`Your server available at http://localhost:${PORT}`);
+    logger.info("----------------------------");
 });
 
 async function convert(fileName, outputFileName) {
-    console.log(`converting ${fileName} to ${outputFileName}`);
+    logger.info(`converting ${fileName} to ${outputFileName}`);
     return await sharp(path.join(__dirname, fileName))
         .webp(AppConfig.Options.webp)
         .toFile(path.join(__dirname, outputFileName));
