@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import winston from 'winston';
+import 'winston-daily-rotate-file';
 import config from 'config';
 import express from 'express';
 import sharp from 'sharp';
@@ -39,13 +40,21 @@ const AppConfig = config.get('App');
 
 const logConfiguration = {
     transports: [
-        new winston.transports.File({
-            filename: './logs/error.log',
+        new winston.transports.DailyRotateFile({
+            filename: './logs/error-%DATE%.log',
+            datePattern: 'YYYY-MM-DD-HH',
+            zippedArchive: true,
+            maxSize: '20m',
+            maxFiles: '14d',
             level: 'error'
         }),
-        new winston.transports.File({
-            filename: './logs/combined.log'
-        }),
+        new winston.transports.DailyRotateFile({
+            filename: './logs/application-%DATE%.log',
+            datePattern: 'YYYY-MM-DD-HH',
+            zippedArchive: true,
+            maxSize: '20m',
+            maxFiles: '14d'
+        })
     ],
     format: winston.format.combine(
         winston.format.label({
@@ -117,6 +126,7 @@ app.get('/i/*', async (req, res) => {
 
     const downloadResponse = await download(`${ImageServerConfig.Address.scheme}://${ImageServerConfig.Address.host}:${ImageServerConfig.Address.port}/${requestedFile}`, requestedFile);
     if (downloadResponse && !downloadResponse.ok) {
+        logger.error(`download failed ${downloadResponse.status} ${downloadResponse.statusText}`);
         res.status(downloadResponse.status).send(downloadResponse.statusText);
         return;
     }
@@ -126,6 +136,11 @@ app.get('/i/*', async (req, res) => {
 
     res.sendFile(responseFilePath, getSendFileOptions(req, responseFilePath));
 });
+
+app.use((err, req, res, next) => {
+    logger.error(err.stack)
+    res.status(500).send('Something broke!')
+})
 
 const PORT = process.env.PORT || AppConfig.Port;
 app.listen(PORT, () => {

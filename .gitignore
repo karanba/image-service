@@ -5,3 +5,4 @@ daemon/mysvc.exe
 daemon/mysvc.exe.config
 *.log
 daemon/mysvc.xml
+logs/
